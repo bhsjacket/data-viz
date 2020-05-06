@@ -1,0 +1,30 @@
+<head>
+    <link href="coronavirus-dashboard.css" rel="stylesheet">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css' rel='stylesheet' />
+</head>
+<img class="mock-header" src="https://i.snipboard.io/gvqCdM.jpg">
+
+<div id='map' style='width: 400px; height: 300px;'></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYmhzamFja2V0IiwiYSI6ImNrNnpyYzZpZTBkOWgzZW9ndXMybG01NXoifQ.dTHlIXLy2CKqQeNJyU-KWw';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/bhsjacket/ck6zs9l5p142p1jmuiy7tkakg'
+    });
+</script>
+
+
+<main class="main">
+    <h1>Coronavirus Dashboard</h1>
+    <p>sdf</p>
+    <div class="visualization">
+        <iframe src="http://jacket.local/wp-content/plugins/data/visualizations/covid-19.php?view=new_cases&hide_source=hidden&hide_logo=hidden"></iframe>
+    </div>
+    <div class="visualization">
+        <iframe src="http://jacket.local/wp-content/plugins/data/visualizations/covid-19.php?view=berkeley&hide_source=hidden&hide_logo=hidden"></iframe>
+    </div>
+    <div class="visualization">
+        <iframe src="http://jacket.local/wp-content/plugins/data/visualizations/covid-19.php?view=alameda&hide_source=hidden&hide_logo=hidden"></iframe>
+    </div>
+</main>

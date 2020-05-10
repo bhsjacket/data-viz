@@ -35,6 +35,7 @@ if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda',
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans&family=PT+Serif&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 
@@ -95,14 +96,23 @@ if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda',
     </div>
     <div class="credits">
         <div class="data">
-            <?php if($_GET['view'] == 'alameda' || $_GET['view'] == 'alameda_bar' && empty($_GET['hide_source'])) { ?>
+            <?php if(empty($_GET['source'])) { ?>
+            <?php if($_GET['view'] == 'alameda' || $_GET['view'] == 'alameda_bar') { ?>
             <span><a href="https://data.acgov.org/" target="_blank">AC</a></span>
             <?php } ?>
-            <?php if($_GET['view'] == 'berkeley' || $_GET['view'] == 'new_cases' || $_GET['view'] == 'berkeley_testing'&& empty($_GET['hide_source'])) { ?>
+            <?php if($_GET['view'] == 'berkeley' || $_GET['view'] == 'new_cases' || $_GET['view'] == 'berkeley_testing') { ?>
             <span><a href="https://data.cityofberkeley.info/" target="_blank">CoB</a></span>
             <?php } ?>
-            <?php if($_GET['view'] == 'bay_area' && empty($_GET['hide_source'])) { ?>
+            <?php if($_GET['view'] == 'bay_area') { ?>
             <span><a href="https://github.com/nytimes/covid-19-data" target="_blank">NYT</a></span>
+            <?php } ?>
+            <?php } elseif(!empty($_GET['embed'])) { ?>
+            <span><i style="font-size:14px;padding-right:5px" class="fas fa-code"></i><a style="cursor:pointer" class="embed-link" target="_blank">Embed</a></span>
+            <script>
+                $('.embed-link').click(function(){
+                    prompt("Note: This embed will not be available forever. Press Cmd/Ctrl + C to copy the IFrame.", '<?php echo '<iframe style="border:none;width:100%;height:360px;" src="https://jeromepaulos.com/bhsjacket/covid-19.php?view=' . $_GET['view'] . '"></iframe>' ?>');
+                });
+            </script>
             <?php } ?>
         </div>
         <?php if(empty($_GET['hide_logo'])) { ?>

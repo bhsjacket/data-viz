@@ -110,7 +110,7 @@ if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda',
             <span><i style="font-size:14px;padding-right:5px" class="fas fa-code"></i><a style="cursor:pointer" class="embed-link" target="_blank">Embed</a></span>
             <script>
                 $('.embed-link').click(function(){
-                    prompt("Note: This embed will not be available forever. Press Cmd/Ctrl + C to copy the IFrame.", '<?php echo '<iframe style="border:none;width:100%;height:360px;" src="https://jeromepaulos.com/bhsjacket/covid-19.php?view=' . $_GET['view'] . '"></iframe>' ?>');
+                    prompt("Note: This embed will not be available forever.", '<?php echo '<iframe style="border:none;width:100%;height:360px;" src="https://jeromepaulos.com/bhsjacket/coronavirus/covid-19.php?view=' . $_GET['view'] . '"></iframe>' ?>');
                 });
             </script>
             <?php } ?>

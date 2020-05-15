@@ -201,6 +201,23 @@ if($_GET['view'] == 'berkeley_testing') {
     } else {
         $data = json_decode(file_get_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json'), 'true');
     }
+/*     if(!in_array(date('m-d-Y-A') . '_DAILY.json', scandir('cache/berkeley_testing/'))) {
+        $json = file_get_contents('https://data.cityofberkeley.info/resource/xfqe-4q78.json');
+        $daily_data = json_decode($json, 'true');
+        file_put_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json', json_encode($data));
+    } else {
+        $daily_data = json_decode(file_get_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '_DAILY.json'), 'true');
+    } */
+
+/*     foreach($data as $adj_stat) {
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+        $adj_data[] = $adj_stat;
+    } */
 
     foreach($data as $stat) {
         $labels[] = DateTime::createFromFormat('F j, Y', html_entity_decode(str_replace("&nbsp;", " ", htmlentities($stat['weekstartdate'], null, 'utf-8'))))->format('M j') . ' to ' . DateTime::createFromFormat('F j, Y', html_entity_decode(str_replace("&nbsp;", " ", htmlentities($stat['weekenddate'], null, 'utf-8'))))->format('M j');
@@ -208,6 +225,10 @@ if($_GET['view'] == 'berkeley_testing') {
         $positive[] = $stat['positivetests'];
         $percent[] = ($stat['percentpositive'] * 100);
     }
+/*     foreach($daily_data as $daily_stat) {
+        $daily_labels[] = date('M j', strtotime($data['dtreported']));
+        $daily_tests[] = $daily_stat['dailytests'];
+    } */
 
     $labels = "'" . implode("','", $labels) . "'";
     $tests = implode(",", $tests);
@@ -491,6 +512,9 @@ if($_GET['view'] == 'bay_area') {
                     }],
                     yAxes: [{
                         stacked: true,
+                        ticks: {
+                            precision: 0,
+                        },
                     }]
                 },
                 tooltips: {
@@ -513,6 +537,7 @@ if($_GET['view'] == 'bay_area') {
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
         Chart.defaults.global.animation.duration = 0;
+        Chart.defaults.scale.gridLines.display = false;
         var chart_id = $('#chart');
         var chart = new Chart(chart_id, {
             type: 'line',
@@ -551,7 +576,10 @@ if($_GET['view'] == 'bay_area') {
                     yAxes: [{
                         id: 'tests',
                         type: 'linear',
-                        position: 'left'
+                        position: 'left',
+                        ticks: {
+                            precision: 0,
+                        },
                     },{
                         id: 'percent',
                         type: 'linear',
@@ -621,6 +649,9 @@ if($_GET['view'] == 'bay_area') {
                 }]
             },
             options: {
+                ticks: {
+                    precision: 0,
+                },
                 elements: {
                     point:{
                         radius: 0,

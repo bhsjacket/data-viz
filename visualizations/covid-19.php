@@ -17,6 +17,7 @@
  * max=numer - only works for berkeley_testing, number < 100
  */
 
+$view = $_GET['view'];
 
 date_default_timezone_set('America/Los_Angeles');
 if(!empty($_GET['color'])) {
@@ -25,7 +26,7 @@ if(!empty($_GET['color'])) {
     $color = '#800000';
 }
 
-if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda', 'new_cases', 'alameda_bar', 'berkeley_testing', 'bay_area'))) {
+if(empty($view) || !in_array($view, array('berkeley', 'alameda', 'new_cases', 'alameda_bar', 'berkeley_testing', 'bay_area'))) {
     echo 'Invalid or undefined "view" parameter';
 } else {
 ?>
@@ -97,20 +98,20 @@ if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda',
     <div class="credits">
         <div class="data">
             <?php if(empty($_GET['source'])) { ?>
-            <?php if($_GET['view'] == 'alameda' || $_GET['view'] == 'alameda_bar') { ?>
+            <?php if($view == 'alameda' || $view == 'alameda_bar') { ?>
             <span><a href="https://data.acgov.org/" target="_blank">AC</a></span>
             <?php } ?>
-            <?php if($_GET['view'] == 'berkeley' || $_GET['view'] == 'new_cases' || $_GET['view'] == 'berkeley_testing') { ?>
+            <?php if($view == 'berkeley' || $view == 'new_cases' || $view == 'berkeley_testing') { ?>
             <span><a href="https://data.cityofberkeley.info/" target="_blank">CoB</a></span>
             <?php } ?>
-            <?php if($_GET['view'] == 'bay_area') { ?>
+            <?php if($view == 'bay_area') { ?>
             <span><a href="https://github.com/nytimes/covid-19-data" target="_blank">NYT</a></span>
             <?php } ?>
             <?php } elseif(!empty($_GET['embed'])) { ?>
             <span><i style="font-size:14px;padding-right:5px" class="fas fa-code"></i><a style="cursor:pointer" class="embed-link" target="_blank">Embed</a></span>
             <script>
                 $('.embed-link').click(function(){
-                    prompt("Note: This embed will not be available forever.", '<?php echo '<iframe style="border:none;width:100%;height:360px;" src="https://jeromepaulos.com/bhsjacket/coronavirus/covid-19.php?view=' . $_GET['view'] . '"></iframe>' ?>');
+                    prompt("Note: This embed will not be available forever.", '<?php echo '<iframe style="border:none;width:100%;height:360px;" src="https://jeromepaulos.com/bhsjacket/coronavirus/covid-19.php?view=' . $view . '"></iframe>' ?>');
                 });
             </script>
             <?php } ?>
@@ -124,14 +125,9 @@ if(empty($_GET['view']) || !in_array($_GET['view'], array('berkeley', 'alameda',
 </main>
 
 <?php // alameda & alameda_bar
-if($_GET['view'] == 'alameda' || $_GET['view'] == 'alameda_bar') {
-    if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/alameda/'))) {
-        $ac_json = file_get_contents('https://services3.arcgis.com/1iDJcsklY3l3KIjE/arcgis/rest/services/AC_dates/FeatureServer/0/query?where=1%3D1&outFields=Date,AC_Cases,AC_CumulCases,AC_Deaths,AC_CumulDeaths&returnGeometry=false&orderByFields=Date%20ASC&outSR=4326&f=json');
-        $ac_data = json_decode($ac_json, 'true')['features'];
-        file_put_contents('cache/alameda/' . date('m-d-Y-A') . '.json', json_encode($ac_data));
-    } else {
-        $ac_data = json_decode(file_get_contents('cache/alameda/' . date('m-d-Y-A') . '.json'), 'true');
-    }
+if($view == 'alameda' || $view == 'alameda_bar') {
+
+    $ac_data = json_decode(file_get_contents('https://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=alameda'), 'true');
 
     foreach($ac_data as $ac_stat) {
         $ac_cases[] = $ac_stat['attributes']['AC_CumulCases'];
@@ -150,23 +146,10 @@ if($_GET['view'] == 'alameda' || $_GET['view'] == 'alameda_bar') {
 ?>
 
 <?php // berkeley & new_cases
-if($_GET['view'] == 'berkeley' || $_GET['view'] == 'new_cases') {
+if($view == 'berkeley' || $view == 'new_cases') {
 
-    if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/berkeley/'))) {
-        $json = file_get_contents('https://data.cityofberkeley.info/resource/xn6j-b766.json');
-        $data = json_decode($json, 'true');
-        file_put_contents('cache/berkeley/' . date('m-d-Y-A') . '.json', json_encode($data));
-    } else {
-        $data = json_decode(file_get_contents('cache/berkeley/' . date('m-d-Y-A') . '.json'), 'true');
-    }
-
-    if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/new_cases/'))) {
-        $json_deaths = file_get_contents('https://services3.arcgis.com/1iDJcsklY3l3KIjE/arcgis/rest/services/AC_dates/FeatureServer/0/query?where=1%3D1&outFields=BkLHJ_CumulDeaths,Date&returnGeometry=false&orderByFields=Date%20ASC&outSR=4326&f=json');
-        $death_data = json_decode($json_deaths, 'true')['features'];
-        file_put_contents('cache/new_cases/' . date('m-d-Y-A') . '.json', json_encode($death_data));
-    } else {
-        $death_data = json_decode(file_get_contents('cache/new_cases/' . date('m-d-Y-A') . '.json'), 'true');
-    }
+    $data = json_decode(file_get_contents('https://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=berkeley'), 'true');
+    $death_data = json_decode(file_get_contents('https://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=berkeley_deaths'), 'true');
 
     foreach($data as $stat) {
         $labels[] = date('M j', strtotime($stat['date']));
@@ -192,32 +175,9 @@ if($_GET['view'] == 'berkeley' || $_GET['view'] == 'new_cases') {
 ?>
 
 <?php // berkeley_testing
-if($_GET['view'] == 'berkeley_testing') {
+if($view == 'berkeley_testing') {
 
-    if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/berkeley_testing/'))) {
-        $json = file_get_contents('https://data.cityofberkeley.info/resource/nw6x-9edb.json');
-        $data = json_decode($json, 'true');
-        file_put_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json', json_encode($data));
-    } else {
-        $data = json_decode(file_get_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json'), 'true');
-    }
-/*     if(!in_array(date('m-d-Y-A') . '_DAILY.json', scandir('cache/berkeley_testing/'))) {
-        $json = file_get_contents('https://data.cityofberkeley.info/resource/xfqe-4q78.json');
-        $daily_data = json_decode($json, 'true');
-        file_put_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json', json_encode($data));
-    } else {
-        $daily_data = json_decode(file_get_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '_DAILY.json'), 'true');
-    } */
-
-/*     foreach($data as $adj_stat) {
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-        $adj_data[] = $adj_stat;
-    } */
+    $data = json_decode(file_get_contents('http://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=berkeley_testing'), 'true');
 
     foreach($data as $stat) {
         $labels[] = DateTime::createFromFormat('F j, Y', html_entity_decode(str_replace("&nbsp;", " ", htmlentities($stat['weekstartdate'], null, 'utf-8'))))->format('M j') . ' to ' . DateTime::createFromFormat('F j, Y', html_entity_decode(str_replace("&nbsp;", " ", htmlentities($stat['weekenddate'], null, 'utf-8'))))->format('M j');
@@ -225,10 +185,6 @@ if($_GET['view'] == 'berkeley_testing') {
         $positive[] = $stat['positivetests'];
         $percent[] = ($stat['percentpositive'] * 100);
     }
-/*     foreach($daily_data as $daily_stat) {
-        $daily_labels[] = date('M j', strtotime($data['dtreported']));
-        $daily_tests[] = $daily_stat['dailytests'];
-    } */
 
     $labels = "'" . implode("','", $labels) . "'";
     $tests = implode(",", $tests);
@@ -238,83 +194,24 @@ if($_GET['view'] == 'berkeley_testing') {
 ?>
 
 <?php // bay_area
-if($_GET['view'] == 'bay_area') {
-        // caching system
-        if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/counties'))) {
-            $counties = array('alameda', 'contra_costa', 'marin', 'napa', 'san_francisco', 'san_mateo', 'santa_clara', 'solano', 'sonoma');
-            $alameda = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Alameda');
-            $alameda = json_decode($alameda, 'true');
-            $contra_costa = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Contra%20Costa');
-            $contra_costa = json_decode($contra_costa, 'true');
-            $marin = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Marin');
-            $marin = json_decode($marin, 'true');
-            $napa = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Napa');
-            $napa = json_decode($napa, 'true');
-            $san_francisco = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=San%20Francisco');
-            $san_francisco = json_decode($san_francisco, 'true');
-            $san_mateo = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=San%20Mateo');
-            $san_mateo = json_decode($san_mateo, 'true');
-            $santa_clara = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Santa%20Clara');
-            $santa_clara = json_decode($santa_clara, 'true');
-            $solano = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Solano');
-            $solano = json_decode($solano, 'true');
-            $sonoma = file_get_contents('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=nyt&country_code=US&province=California&county=Sonoma');
-            $sonoma = json_decode($sonoma, 'true');
+if($view == 'bay_area') {
 
-            $data = array_combine($counties, array($alameda, $contra_costa, $marin, $napa, $san_francisco, $san_mateo, $santa_clara, $solano, $sonoma));
+    $data = file_get_contents('http://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=bay_area');
+    $data = json_decode($data, true);
 
-            $data['alameda'][] = array('population' => '1671000');
-            $data['contra_costa'][] = array('population' => '1154000');
-            $data['marin'][] = array('population' => '258826');
-            $data['napa'][] = array('population' => '137744');
-            $data['san_francisco'][] = array('population' => '883305');
-            $data['san_mateo'][] = array('population' => '727206');
-            $data['santa_clara'][] = array('population' => '1928000');
-            $data['solano'][] = array('population' => '447643');
-            $data['sonoma'][] = array('population' => '494336');
+    extract($data);
 
-            $data['alameda'][] = array('income' => '102125');
-            $data['contra_costa'][] = array('income' => '101618');
-            $data['marin'][] = array('income' => '126373');
-            $data['napa'][] = array('income' => '79637');
-            $data['san_francisco'][] = array('income' => '112376');
-            $data['san_mateo'][] = array('income' => '124425');
-            $data['santa_clara'][] = array('income' => '126606');
-            $data['solano'][] = array('income' => '84395');
-            $data['sonoma'][] = array('income' => '81395');
+    foreach($data as $county) {
+        $labels[] = $county['locations'][0]['county'];
+    }
 
-            file_put_contents('cache/counties/' . date('m-d-Y-A') . '.json', json_encode($data));
+    foreach($data as $county) {
+        $cases[] = ($county['latest']['confirmed'] / $county[0]['population']);
+        $deaths[] = ($county['latest']['deaths'] / $county[0]['population']);
+        $income[] = ($county[1]['income'] / 100000000);
+    }
 
-            extract($data);
-
-            foreach($data as $county) {
-                $labels[] = $county['locations'][0]['county'];
-            }
-
-            foreach($data as $county) {
-                $cases[] = ($county['latest']['confirmed'] / $county[0]['population']);
-                $deaths[] = ($county['latest']['deaths'] / $county[0]['population']);
-                $income[] = ($county[1]['income'] / 100000000);
-            }
-
-            echo "<script>console.log('fetched new data');</script>";
-        } else {
-            $data = json_decode(file_get_contents('cache/counties/' . date('m-d-Y-A') . '.json'), true);
-            
-            extract($data);
-
-            foreach($data as $county) {
-                $labels[] = $county['locations'][0]['county'];
-            }
-
-            foreach($data as $county) {
-                $cases[] = ($county['latest']['confirmed'] / $county[0]['population']);
-                $deaths[] = ($county['latest']['deaths'] / $county[0]['population']);
-                $income[] = ($county[1]['income'] / 100000000);
-            }
-
-            echo "<script>console.log('used cached data');</script>";
-        }
+    echo "<script>console.log('used cached data');</script>";
 
     $labels = "'" . implode("','", $labels) . "'";
     $deaths = implode(",", $deaths);
@@ -323,7 +220,9 @@ if($_GET['view'] == 'bay_area') {
 }
 ?>
 
-<?php if($_GET['view'] == 'alameda') { ?>
+<?php /** JAVASCRIPT CHARTS */ ?>
+
+<?php if($view == 'alameda') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -369,7 +268,7 @@ if($_GET['view'] == 'bay_area') {
 </script>
 <?php } ?>
 
-<?php if($_GET['view'] == 'berkeley') { ?>
+<?php if($view == 'berkeley') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -415,7 +314,7 @@ if($_GET['view'] == 'bay_area') {
 </script>
 <?php } ?>
 
-<?php if($_GET['view'] == 'new_cases') { ?>
+<?php if($view == 'new_cases') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -477,7 +376,7 @@ if($_GET['view'] == 'bay_area') {
 </script>
 <?php } ?>
 
-<?php if($_GET['view'] == 'alameda_bar') { ?>
+<?php if($view == 'alameda_bar') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -532,7 +431,7 @@ if($_GET['view'] == 'bay_area') {
 </script>
 <?php } ?>
 
-<?php if($_GET['view'] == 'berkeley_testing') { ?>
+<?php if($view == 'berkeley_testing') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -620,7 +519,7 @@ if($_GET['view'] == 'bay_area') {
 </script>
 <?php } ?>
 
-<?php if($_GET['view'] == 'bay_area') { ?>
+<?php if($view == 'bay_area') { ?>
 <script>
     $(document).ready(function(){
         Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
@@ -679,5 +578,4 @@ if($_GET['view'] == 'bay_area') {
         });
     });
 </script>
-<?php } ?>
-<?php } ?>
+<?php }} ?>

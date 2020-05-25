@@ -1,6 +1,6 @@
 # Data Visualizations
 Datasets and visualizations for the Berkeley High Jacket.
-## COVID-19 Visualizations
+## [COVID-19 Visualizations](https://berkeleyhighjacket.com/2020/multimedia/live-coronavirus-data/)
 This is the file structure needed to get started:
 ```
 covid-19.php

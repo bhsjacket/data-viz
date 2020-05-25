@@ -7,6 +7,7 @@
  * alameda_bar - new daily alameda county cases + deaths
  * berkeley_testing - berkeley weekly tests and positive results
  * bay_area - all cases and deaths in the bay area, by county, adjusted for population, with income line
+ * berkeley_total_tests - total tests for Berkeley
  * 
  * color= hex color code w/ #, 6 characters
  * 
@@ -14,7 +15,7 @@
  * 
  * hide_logo=hidden
  * 
- * max=numer - only works for berkeley_testing, number < 100
+ * max=number - only works for berkeley_testing, number <100
  */
 
 $view = $_GET['view'];
@@ -26,7 +27,7 @@ if(!empty($_GET['color'])) {
     $color = '#800000';
 }
 
-if(empty($view) || !in_array($view, array('berkeley', 'alameda', 'new_cases', 'alameda_bar', 'berkeley_testing', 'bay_area'))) {
+if(empty($view) || !in_array($view, array('berkeley', 'alameda', 'new_cases', 'alameda_bar', 'berkeley_testing', 'bay_area', 'berkeley_total_tests'))) {
     echo 'Invalid or undefined "view" parameter';
 } else {
 ?>
@@ -135,6 +136,7 @@ if($view == 'alameda' || $view == 'alameda_bar') {
         $ac_new_cases[] = $ac_stat['attributes']['AC_Cases'];
         $ac_new_deaths[] = $ac_stat['attributes']['AC_Deaths'];
         $labels[] = date('M j', ($ac_stat['attributes']['Date'] / 1000));
+        $ac_ifr[] = ($ac_stat['attributes']['AC_CumulDeaths'] / $ac_stat['attributes']['AC_CumulCases']) * 100;
     };
 
     $labels = "'" . implode("','", $labels) . "'";
@@ -142,6 +144,7 @@ if($view == 'alameda' || $view == 'alameda_bar') {
     $ac_deaths = implode(",", $ac_deaths);
     $ac_new_cases = implode(",", $ac_new_cases);
     $ac_new_deaths = implode(",", $ac_new_deaths);
+    $ac_ifr = implode(",", $ac_ifr);
 }
 ?>
 
@@ -174,8 +177,8 @@ if($view == 'berkeley' || $view == 'new_cases') {
 }
 ?>
 
-<?php // berkeley_testing
-if($view == 'berkeley_testing') {
+<?php // berkeley_testing & berkeley_total_tests
+if($view == 'berkeley_testing' || $view == 'berkeley_total_tests') {
 
     $data = json_decode(file_get_contents('http://jeromepaulos.com/bhsjacket/coronavirus/data.php?data=berkeley_testing'), 'true');
 
@@ -184,12 +187,20 @@ if($view == 'berkeley_testing') {
         $tests[] = $stat['totaltests'];
         $positive[] = $stat['positivetests'];
         $percent[] = ($stat['percentpositive'] * 100);
+
+        @$total_positive_temp += $stat['positivetests'];
+        $total_positive[] = $total_positive_temp;
+        @$total_tests_temp += $stat['totaltests'];
+        $total_tests[] = $total_tests_temp;
     }
 
     $labels = "'" . implode("','", $labels) . "'";
     $tests = implode(",", $tests);
     $positive = implode(",", $positive);
     $percent = implode(",", $percent);
+
+    $total_tests = implode(",", $total_tests);
+    $total_positive = implode(",", $total_positive);
 }
 ?>
 
@@ -234,14 +245,23 @@ if($view == 'bay_area') {
                 labels: [<?php echo $labels; ?>],
                 datasets: [{
                     data: [<?php echo $ac_cases; ?>],
-                    label: 'Alameda County Cases',
+                    label: 'Cumulative Alameda County Cases',
                     borderColor: '<?php echo $color; ?>',
                     fill: 'none',
+                    yAxisID: 'cases'
                 }, {
                     data: [<?php echo $ac_deaths; ?>],
-                    label: 'Alameda County Deaths',
+                    label: 'Cumulative Alameda County Deaths',
                     borderColor: '#000000',
                     fill: 'none',
+                    yAxisID: 'cases'
+                },{
+                    data: [<?php echo $ac_ifr; ?>],
+                    label: 'Infection Fatality Rate %',
+                    borderColor: '<?php echo $color ?>',
+                    borderDash: [5,3],
+                    yAxisID: 'rate',
+                    fill: 'none'
                 }]
             },
             options: {
@@ -250,18 +270,45 @@ if($view == 'bay_area') {
                         radius: 0,
                     }
                 },
-                legend: {
-
-                },
                 tooltips: {
                     mode: 'index',
                     intersect: false,
                     caretSize: 0,
                     backgroundColor: '#000000',
                     cornerRadius: 0,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            if(data.datasets[tooltipItem.datasetIndex].label == 'Infection Fatality Rate %') {
+                                return 'Infection Fatality Rate: ' + Math.round(10 * data['datasets'][2]['data'][tooltipItem['index']])/10 + '%';
+                            } else if(data.datasets[tooltipItem.datasetIndex].label == 'Cumulative Alameda County Cases') {
+                                return data.datasets[tooltipItem.datasetIndex].label + ': ' + data['datasets'][0]['data'][tooltipItem['index']];
+                            } else {
+                                return data.datasets[tooltipItem.datasetIndex].label + ': ' + data['datasets'][1]['data'][tooltipItem['index']];
+                            }
+                        }
+                    }
                 },
                 responsive: true,
                 maintainAspectRatio: false,
+                scales: {
+                    yAxes: [{
+                            id: 'cases',
+                            type: 'linear',
+                            position: 'left',
+                            ticks: {
+                                precision: 0,
+                            },
+                        },{
+                            id: 'rate',
+                            type: 'linear',
+                            position: 'right',
+                            ticks: {
+                                callback: function(value){
+                                    return value + '%';
+                                },
+                            }
+                        }]
+            },
             }
         });
     });
@@ -280,12 +327,12 @@ if($view == 'bay_area') {
                 labels: [<?php echo $labels; ?>],
                 datasets: [{
                     data: [<?php echo $berkeley_cases; ?>],
-                    label: 'Berkeley Cases',
+                    label: 'Cumulative Berkeley Cases',
                     borderColor: '<?php echo $color; ?>',
                     fill: 'none',
                 }, {
                     data: [<?php echo $berkeley_deaths; ?>],
-                    label: 'Berkeley Deaths',
+                    label: 'Cumulative Berkeley Deaths',
                     borderColor: '#000000',
                     fill: 'none',
                 }]
@@ -326,13 +373,13 @@ if($view == 'bay_area') {
                 labels: [<?php echo $labels; ?>],
                 datasets: [{
                     data: [<?php echo $berkeley_new_cases; ?>],
-                    label: 'New Berkeley Cases',
+                    label: 'Daily New Berkeley Cases',
                     backgroundColor: '<?php echo $color; ?>',
                     fill: 'none',
                     order: 2,
                 }, {
                     data: [<?php echo $berkeley_cases_adj; ?>],
-                    label: 'Total Berkeley Cases',
+                    label: 'Cumulative Berkeley Cases',
                     backgroundColor: '#808080',
                     fill: 'none',
                 }]
@@ -359,7 +406,7 @@ if($view == 'bay_area') {
                     cornerRadius: 0,
                     callbacks: {
                         label: function(tooltipItem, data) {
-                            if(data.datasets[tooltipItem.datasetIndex].label == 'New Berkeley Cases') {
+                            if(data.datasets[tooltipItem.datasetIndex].label == 'Daily New Berkeley Cases') {
                                 var label = data.datasets[tooltipItem.datasetIndex].label + ': ' + data['datasets'][0]['data'][tooltipItem['index']];
                             } else {
                                 var label = data.datasets[tooltipItem.datasetIndex].label + ': ' + (data['datasets'][1]['data'][tooltipItem['index']] + data['datasets'][0]['data'][tooltipItem['index']]);
@@ -388,13 +435,13 @@ if($view == 'bay_area') {
                 labels: [<?php echo $labels; ?>],
                 datasets: [{
                     data: [<?php echo $ac_new_deaths; ?>],
-                    label: 'New Alameda County Deaths',
+                    label: 'Daily New Alameda County Deaths',
                     backgroundColor: '<?php echo $color; ?>',
                     fill: 'none',
                     order: 2,
                 }, {
                     data: [<?php echo $ac_new_cases; ?>],
-                    label: 'New Alameda County Cases',
+                    label: 'Daily New Alameda County Cases',
                     backgroundColor: '#808080',
                     fill: 'none',
                 }]
@@ -579,3 +626,46 @@ if($view == 'bay_area') {
     });
 </script>
 <?php }} ?>
+
+<?php if($view == 'berkeley_total_tests') { ?>
+<script>
+    $(document).ready(function(){
+        Chart.defaults.global.defaultFontFamily = "'PT Sans', serif";
+        Chart.defaults.global.animation.duration = 0;
+        var chart_id = $('#chart');
+        var chart = new Chart(chart_id, {
+            type: 'line',
+            data: {
+                labels: [<?php echo $labels; ?>],
+                datasets: [{
+                    data: [<?php echo $total_tests; ?>],
+                    label: 'Cumulative Tests in Berkeley',
+                    borderColor: '<?php echo $color ?>',
+                    fill: 'none',
+                }, {
+                    data: [<?php echo $total_positive; ?>],
+                    label: 'Cumulative Positive Tests in Berkeley',
+                    borderColor: '#808080',
+                    fill: 'none',
+                }]
+            },
+            options: {
+                elements: {
+                    point:{
+                        radius: 0,
+                    }
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    caretSize: 0,
+                    backgroundColor: '#000000',
+                    cornerRadius: 0,
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+    });
+</script>
+<?php } ?>

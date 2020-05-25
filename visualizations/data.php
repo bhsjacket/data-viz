@@ -14,7 +14,7 @@ if($dataset == 'berkeley_testing') {
     if(!in_array(date('m-d-Y-A') . '.json', scandir('cache/berkeley_testing/'))) {
         $data = file_get_contents('https://data.cityofberkeley.info/resource/nw6x-9edb.json');
         print_r($data);
-        file_put_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json', $json);
+        file_put_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json', $data);
         die;
     } else {
         $data = file_get_contents('cache/berkeley_testing/' . date('m-d-Y-A') . '.json');
